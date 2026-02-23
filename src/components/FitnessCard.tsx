@@ -1,4 +1,5 @@
 import React from "react";
+import { motion } from "framer-motion";
 
 interface FitnessCardProps {
   title?: string;
@@ -11,9 +12,12 @@ interface FitnessCardProps {
 
 const FitnessCard: React.FC<FitnessCardProps> = ({ title, subtitle, icon, children, className = "", onClick }) => {
   return (
-    <div
+    <motion.div
       onClick={onClick}
-      className={`rounded-2xl border border-border bg-card p-6 shadow-fitness transition-all duration-300 hover:shadow-fitness-hover ${
+      whileHover={onClick ? { scale: 1.02, y: -2 } : undefined}
+      whileTap={onClick ? { scale: 0.98 } : undefined}
+      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+      className={`rounded-2xl border border-border bg-card p-6 shadow-fitness transition-shadow duration-300 hover:shadow-fitness-hover ${
         onClick ? "cursor-pointer" : ""
       } ${className}`}
     >
@@ -27,7 +31,7 @@ const FitnessCard: React.FC<FitnessCardProps> = ({ title, subtitle, icon, childr
         </div>
       )}
       {children}
-    </div>
+    </motion.div>
   );
 };
 
