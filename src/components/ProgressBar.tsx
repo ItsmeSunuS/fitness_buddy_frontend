@@ -1,4 +1,5 @@
 import React from "react";
+import { motion } from "framer-motion";
 
 interface ProgressBarProps {
   value: number; // 0-100
@@ -34,9 +35,11 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
         </div>
       )}
       <div className={`w-full overflow-hidden rounded-full bg-muted ${sizeMap[size]}`}>
-        <div
-          className={`${sizeMap[size]} rounded-full ${colorMap[color]} transition-all duration-700 ease-out`}
-          style={{ width: `${clamped}%` }}
+        <motion.div
+          className={`${sizeMap[size]} rounded-full ${colorMap[color]}`}
+          initial={{ width: 0 }}
+          animate={{ width: `${clamped}%` }}
+          transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
         />
       </div>
     </div>

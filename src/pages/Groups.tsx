@@ -1,8 +1,16 @@
 import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import DashboardLayout from "@/components/DashboardLayout";
 import FitnessCard from "@/components/FitnessCard";
 import ProgressBar from "@/components/ProgressBar";
+import AnimatedPage from "@/components/AnimatedPage";
+import AnimatedCard from "@/components/AnimatedCard";
+import CountUp from "@/components/CountUp";
 import api from "@/services/api";
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell,
+} from "recharts";
 
 interface GroupMember {
   name: string;
@@ -16,6 +24,11 @@ interface Group {
   totalCalories: number;
   weeklyGoal: number;
 }
+
+const MEMBER_COLORS = [
+  "hsl(160, 84%, 39%)", "hsl(172, 66%, 50%)", "hsl(142, 76%, 36%)",
+  "hsl(38, 92%, 50%)", "hsl(217, 91%, 60%)",
+];
 
 const Groups: React.FC = () => {
   const [groups, setGroups] = useState<Group[]>([]);
@@ -72,64 +85,115 @@ const Groups: React.FC = () => {
     setShowCreate(false);
   };
 
+  // Aggregated stats for overview chart
+  const overviewBarData = groups.map((g) => ({
+    name: g.name,
+    burned: g.totalCalories,
+    goal: g.weeklyGoal,
+  }));
+
   return (
     <DashboardLayout>
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="font-display text-3xl font-bold text-foreground">Group Workouts 👥</h1>
-        <button onClick={() => setShowCreate(!showCreate)}
-          className="rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-primary-glow hover:opacity-90">
-          {showCreate ? "Cancel" : "+ New Group"}
-        </button>
-      </div>
+      <AnimatedPage>
+        <div className="mb-6 flex items-center justify-between">
+          <h1 className="font-display text-3xl font-bold text-foreground">Group Workouts 👥</h1>
+          <motion.button
+            onClick={() => setShowCreate(!showCreate)}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-primary-glow hover:opacity-90"
+          >
+            {showCreate ? "Cancel" : "+ New Group"}
+          </motion.button>
+        </div>
 
-      {showCreate && (
-        <FitnessCard className="mb-6">
-          <form onSubmit={handleCreate} className="flex gap-3">
-            <input value={newGroupName} onChange={(e) => setNewGroupName(e.target.value)} required
-              className="flex-1 rounded-xl border border-input bg-background px-4 py-3 text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 transition-theme"
-              placeholder="Group name (3-5 members)" />
-            <button type="submit" className="rounded-xl bg-primary px-6 py-3 font-semibold text-primary-foreground hover:opacity-90">Create</button>
-          </form>
-        </FitnessCard>
-      )}
+        <AnimatePresence>
+          {showCreate && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+              className="overflow-hidden"
+            >
+              <FitnessCard className="mb-6">
+                <form onSubmit={handleCreate} className="flex gap-3">
+                  <input value={newGroupName} onChange={(e) => setNewGroupName(e.target.value)} required
+                    className="flex-1 rounded-xl border border-input bg-background px-4 py-3 text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 transition-theme"
+                    placeholder="Group name (3-5 members)" />
+                  <button type="submit" className="rounded-xl bg-primary px-6 py-3 font-semibold text-primary-foreground hover:opacity-90">Create</button>
+                </form>
+              </FitnessCard>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {groups.map((group) => (
-          <FitnessCard key={group._id} title={group.name} icon="👥">
-            {/* Combined progress */}
-            <ProgressBar
-              value={(group.totalCalories / group.weeklyGoal) * 100}
-              label={`${group.totalCalories.toLocaleString()} / ${group.weeklyGoal.toLocaleString()} cal`}
-              size="lg"
-              color="accent"
-            />
+        {/* Overview Chart */}
+        {groups.length > 0 && (
+          <AnimatedCard index={0} className="mb-6">
+            <FitnessCard title="Group Performance Overview" icon="📊">
+              <div className="h-56">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={overviewBarData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(160, 15%, 90%)" opacity={0.4} />
+                    <XAxis dataKey="name" tick={{ fontSize: 12, fill: "hsl(160, 10%, 45%)" }} />
+                    <YAxis tick={{ fontSize: 12, fill: "hsl(160, 10%, 45%)" }} />
+                    <Tooltip contentStyle={{ borderRadius: "12px", border: "1px solid hsl(160, 15%, 90%)" }} />
+                    <Bar dataKey="burned" name="Burned" fill="hsl(160, 84%, 39%)" radius={[6, 6, 0, 0]} animationDuration={1200} />
+                    <Bar dataKey="goal" name="Goal" fill="hsl(160, 84%, 39%)" opacity={0.2} radius={[6, 6, 0, 0]} animationDuration={1200} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </FitnessCard>
+          </AnimatedCard>
+        )}
 
-            {/* Member breakdown (simple bar chart) */}
-            <div className="mt-5 space-y-3">
-              <p className="text-sm font-medium text-foreground">Member Contributions</p>
-              {group.members.map((m) => {
-                const pct = group.totalCalories > 0 ? (m.caloriesBurned / group.totalCalories) * 100 : 0;
-                return (
-                  <div key={m.name} className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
-                      {m.name.charAt(0)}
+        {/* Group cards with pie charts */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          {groups.map((group, gi) => {
+            const pieData = group.members.map((m) => ({ name: m.name, value: m.caloriesBurned }));
+            return (
+              <AnimatedCard key={group._id} index={gi + 1}>
+                <FitnessCard title={group.name} icon="👥">
+                  {/* Combined progress */}
+                  <ProgressBar
+                    value={(group.totalCalories / group.weeklyGoal) * 100}
+                    label={`${group.totalCalories.toLocaleString()} / ${group.weeklyGoal.toLocaleString()} cal`}
+                    size="lg"
+                    color="accent"
+                  />
+
+                  {/* Member pie chart */}
+                  <div className="mt-4 flex items-center">
+                    <div className="h-40 w-1/2">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie data={pieData} cx="50%" cy="50%" innerRadius={30} outerRadius={55} paddingAngle={3} dataKey="value" animationDuration={1200}>
+                            {pieData.map((_, i) => <Cell key={i} fill={MEMBER_COLORS[i % MEMBER_COLORS.length]} />)}
+                          </Pie>
+                          <Tooltip contentStyle={{ borderRadius: "12px" }} />
+                        </PieChart>
+                      </ResponsiveContainer>
                     </div>
-                    <div className="flex-1">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-foreground">{m.name}</span>
-                        <span className="text-muted-foreground">{m.caloriesBurned} cal</span>
-                      </div>
-                      <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-muted">
-                        <div className="h-2 rounded-full bg-primary transition-all duration-500" style={{ width: `${pct}%` }} />
-                      </div>
+                    <div className="w-1/2 space-y-2">
+                      <p className="text-sm font-medium text-foreground mb-2">Contributions</p>
+                      {group.members.map((m, i) => (
+                        <div key={m.name} className="flex items-center gap-2">
+                          <div className="h-3 w-3 rounded-full" style={{ backgroundColor: MEMBER_COLORS[i % MEMBER_COLORS.length] }} />
+                          <span className="text-sm text-muted-foreground flex-1">{m.name}</span>
+                          <span className="text-sm font-semibold text-foreground">
+                            <CountUp end={m.caloriesBurned} duration={1} />
+                          </span>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          </FitnessCard>
-        ))}
-      </div>
+                </FitnessCard>
+              </AnimatedCard>
+            );
+          })}
+        </div>
+      </AnimatedPage>
     </DashboardLayout>
   );
 };
