@@ -4,9 +4,9 @@ import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
 
 const navItems = [
-  { path: "/dashboard", label: "Dashboard", icon: "📊" },
   { path: "/workouts", label: "Workouts", icon: "🏋️" },
   { path: "/buddies", label: "Buddies", icon: "🤝" },
+  { path: "/messages", label: "Messages", icon: "💬" },
   { path: "/challenges", label: "Challenges", icon: "🏆" },
   { path: "/groups", label: "Groups", icon: "👥" },
   { path: "/gym-finder", label: "Find Gyms", icon: "📍" },

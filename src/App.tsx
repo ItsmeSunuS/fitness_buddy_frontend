@@ -12,6 +12,7 @@ import Buddies from "./pages/Buddies";
 import Challenges from "./pages/Challenges";
 import Groups from "./pages/Groups";
 import GymFinder from "./pages/GymFinder";
+import Messages from "./pages/Messages";
 import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 
@@ -35,6 +36,7 @@ const App = () => (
           <Route path="/challenges" element={<ProtectedRoute><Challenges /></ProtectedRoute>} />
           <Route path="/groups" element={<ProtectedRoute><Groups /></ProtectedRoute>} />
           <Route path="/gym-finder" element={<ProtectedRoute><GymFinder /></ProtectedRoute>} />
+          <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
 
           {/* Admin only */}
           <Route path="/admin" element={<ProtectedRoute adminOnly><AdminDashboard /></ProtectedRoute>} />
